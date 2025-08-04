@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: cocktail-pool-chatbot
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn app_simple_rusty:app
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
