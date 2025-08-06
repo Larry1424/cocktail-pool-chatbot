@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
+from datetime import datetime
 import openai
 import os
 PUBLIC_URL = os.getenv("PUBLIC_URL", "https://yourdomain.com")
@@ -34,7 +35,30 @@ Key Info to Know (You Can Use Naturally):
 - Semi-inground pools: Start around $40,000  
 - Custom inground pools: ~$850 per perimeter foot  
   > (Perimeter = add all four sides)
+
 ---
+
+Construction & Process Overview:
+
+Once the design is finalized, here's what installation typically looks like:
+
+1. **Site Readiness & Permits:**  
+   Outdoor electrical and water access are required. We take care of all necessary permits and inspections to ensure everything meets local codes.
+
+2. **Site Preparation:**  
+   We prepare the space by marking the layout, excavating, and ensuring proper leveling. A $5,000 contingency covers rock or groundwater surprises to keep the process smooth.
+
+3. **Pool Installation:**  
+   We install the pool shell, concrete coping, and connect all plumbing and electrical — including the WiFi-enabled pump.
+
+4. **Finishing Touches:**  
+   Lighting package, tanning ledge or bench (if added), and any other upgrades are installed and tested.
+
+5. **Wrap-up:**  
+   We complete final inspections, offer a walk-through and pool school, and make sure you're set to enjoy your new space.
+
+---
+
 Tone and Conversation Style:
 
 You’re not scripted. You’re not robotic. You respond like a real person would.
@@ -63,8 +87,11 @@ If someone asks about slopes, tight yards, or weird layouts:
 
 If someone brings up financing or stretching the budget:  
 > “Some folks like to explore financing to spread things out — totally up to you, but I can share what that looks like if you're curious.”
+
 ---
+
 Info Source:
+
 You’ve been trained directly on Country Leisure’s cocktail pool offerings and their official site:  
 👉 https://www.countryleisuremfg.com/cocktail-pools
 
@@ -84,7 +111,7 @@ def chat():
         session["pool_type"] = None
 
     # === Track preferences ===
-    if "relax" in user_msg:
+    if "relax" in user_msg:F
         session["focus"] = "relaxation"
     elif "entertain" in user_msg:
         session["focus"] = "entertaining"
@@ -108,15 +135,23 @@ def chat():
         session["features"].append("wraparound bench")
 
     # === Build memory summary ===
-    memory_summary = ""
+    memory_summary_parts = []
+
     if session.get("focus"):
-        memory_summary += f"The user is focused on {session['focus']}. "
+        memory_summary_parts.append(f"they're focused on {session['focus']}")
     if session.get("budget"):
-        memory_summary += "They’ve brought up budget. "
+        memory_summary_parts.append("they're keeping budget in mind")
     if session.get("pool_type"):
-        memory_summary += f"They're leaning toward a {session['pool_type']} pool. "
+        memory_summary_parts.append(f"they're considering a {session['pool_type']} pool")
     if session.get("features"):
-        memory_summary += "They've shown interest in features like: " + ", ".join(session["features"]) + ". "
+        features = ", ".join(session["features"])
+        memory_summary_parts.append(f"they're interested in features like {features}")
+
+    if memory_summary_parts:
+        memory_summary = "So far, the customer has mentioned that " + ", and ".join(memory_summary_parts) + "."
+    else:
+        memory_summary = ""
+
 
     # === Compile full message history ===
     message_history = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -124,7 +159,7 @@ def chat():
         message_history.append({"role": "assistant", "content": memory_summary})
 
     # Append conversation history
-    for msg in session["messages"][-10:]:  # keep last 10 turns
+    for msg in session["messages"][-20:]:  # keep 10 full turns (10 user + 10 assistant)
         message_history.append(msg)
 
     # Add latest user message
@@ -141,6 +176,16 @@ def chat():
             max_tokens=700
         )
         reply = response.choices[0].message["content"]
+        # === Conversation Logging ===
+        log_dir = "/mnt/conversations"
+        os.makedirs(log_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_path = os.path.join(log_dir, f"{timestamp}.txt")
+
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            log_file.write("=== NEW MESSAGE ===\n")
+            log_file.write(f"User: {request.json.get('message', '')}\n")
+            log_file.write(f"Bot: {reply}\n\n")
         session["messages"].append({"role": "assistant", "content": reply})
         return jsonify({"reply": reply})
 
