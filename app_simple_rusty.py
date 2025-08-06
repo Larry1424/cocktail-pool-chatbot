@@ -111,7 +111,7 @@ def chat():
         session["pool_type"] = None
 
     # === Track preferences ===
-    if "relax" in user_msg:F
+    if "relax" in user_msg:
         session["focus"] = "relaxation"
     elif "entertain" in user_msg:
         session["focus"] = "entertaining"
