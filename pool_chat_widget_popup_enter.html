@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pool Chat Widget</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; font-family: 'Lato', sans-serif; }
+
+    #chatToggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: #083358;
+      color: white;
+      font-size: 28px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      z-index: 9999;
+    }
+
+    #poolChatWidget {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 25vw;
+      max-width: 350px;
+      height: 60vh;
+      min-height: 400px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    #chatHeader {
+      background-color: #083358;
+      color: white;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    #chatBody {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 0.95rem;
+      background: #f7f7f7;
+    }
+
+    .msg { margin: 10px 0; }
+    .user { text-align: right; color: #444; }
+    .bot { text-align: left; color: #083358; }
+    .bot a { color: #1e90ff; text-decoration: underline; }
+
+    #chatInput {
+      display: flex;
+      padding: 8px;
+      background: #eee;
+    }
+
+    #chatInput input {
+      flex: 1;
+      padding: 8px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #chatInput button {
+      background: #083358;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      margin-left: 6px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media screen and (max-width: 768px) {
+      #poolChatWidget {
+        width: 50vw;
+        bottom: 90px;
+        right: 10px;
+      }
+
+      #chatToggle {
+        bottom: 20px;
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<button id="chatToggle" onclick="toggleChat()">💬</button>
+
+<div id="poolChatWidget">
+  <div id="chatHeader">Pool Chat</div>
+  <div id="chatBody">
+    <div class="msg bot">Hi! Want pricing, features, or design tips? I’ve got you — let’s dive in.</div>
+  </div>
+  <div id="chatInput">
+    <input type="text" id="userInput" placeholder="Type your message..." onkeydown="handleEnter(event)" />
+    <button onclick="sendPoolMsg()">Send</button>
+  </div>
+</div>
+
+<script>
+  function toggleChat() {
+    const chat = document.getElementById("poolChatWidget");
+    chat.style.display = (chat.style.display === "flex") ? "none" : "flex";
+  }
+
+  function handleEnter(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendPoolMsg();
+    }
+  }
+
+  async function sendPoolMsg() {
+    const input = document.getElementById("userInput");
+    const body = document.getElementById("chatBody");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const userBubble = document.createElement("div");
+    userBubble.className = "msg user";
+    userBubble.textContent = msg;
+    body.appendChild(userBubble);
+
+    const botBubble = document.createElement("div");
+    botBubble.className = "msg bot";
+    botBubble.textContent = "Thinking...";
+    body.appendChild(botBubble);
+
+    input.value = "";
+    body.scrollTop = body.scrollHeight;
+
+    try {
+      const res = await fetch("https://cocktail-pool-chatbot.onrender.com/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg })
+      });
+
+      const data = await res.json();
+      botBubble.innerHTML = (data.reply || "Hmm... I didn’t catch that.")
+        .replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank">$1</a>');
+    } catch (err) {
+      botBubble.textContent = "Sorry — I’m having trouble reaching the server.";
+    }
+
+    body.scrollTop = body.scrollHeight;
+  }
+</script>
+
+</body>
+</html>

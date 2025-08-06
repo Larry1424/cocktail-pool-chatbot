@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "name": "Cocktail Pool Chatbot",
+  "triggers": [
+    {
+      "type": "onChatOpened",
+      "actions": [
+        {
+          "type": "sendMessage",
+          "message": "Pool Chat here. Want pricing? Features? Design help? I've got you — let's dive in."
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "type": "trigger",
+      "triggerType": "onMessage",
+      "conditions": [],
+      "actions": [
+        {
+          "type": "externalRequest",
+          "url": "https://cocktail-pool-chatbot.onrender.com/chat",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\"message\": \"{{ visitor.message }}\"}",
+          "responseMapping": {
+            "type": "text",
+            "value": "{{ response.reply }}"
+          }
+        },
+        {
+          "type": "sendMessage",
+          "message": "{{ response.reply }}"
+        }
+      ]
+    }
+  ]
+}
