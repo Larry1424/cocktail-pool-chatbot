@@ -138,14 +138,14 @@ def chat():
     memory_summary_parts = []
 
     if session.get("focus"):
-        memory_summary_parts.append(f"they're focused on {session['focus']}")
+        memory_summary_parts.append("they're focused on " + session["focus"])
     if session.get("budget"):
         memory_summary_parts.append("they're keeping budget in mind")
     if session.get("pool_type"):
-        memory_summary_parts.append(f"they're considering a {session['pool_type']} pool")
+        memory_summary_parts.append("they're considering a " + session["pool_type"] + " pool")
     if session.get("features"):
         features = ", ".join(session["features"])
-        memory_summary_parts.append(f"they're interested in features like {features}")
+        memory_summary_parts.append("they're interested in features like " + features)
 
     if memory_summary_parts:
         memory_summary = "So far, the customer has mentioned that " + ", and ".join(memory_summary_parts) + "."
